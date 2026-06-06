@@ -1,0 +1,21 @@
+# PEBKAC Harness Automation Configuration
+# Auto-generated during unboxing
+
+heartbeat:
+  interval: "*/5 * * * *"
+  script: heartbeat.sh
+  script_windows: heartbeat.ps1
+  description: "Check session health every 5 minutes"
+
+checkpoint_backup:
+  interval: "0 */1 * * *"
+  script: heartbeat.sh
+  script_windows: heartbeat.ps1
+  description: "Verify checkpoint freshness hourly"
+
+# To install on macOS/Linux:
+#   crontab -e
+#   */5 * * * * cd <repo-root>/modules/pebkac && ./.harness/automation/heartbeat.sh
+#
+# To install on Windows:
+#   schtasks /create /tn "PEBKAC Heartbeat" /tr "powershell -ExecutionPolicy Bypass -File .harness\automation\heartbeat.ps1" /sc minute /mo 5

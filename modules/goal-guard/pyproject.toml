@@ -1,0 +1,20 @@
+[project]
+name = "goalguard"
+version = "0.1.0"
+description = "Headless, model- and harness-agnostic goal-drift guardian for LLM agent runs."
+requires-python = ">=3.10"
+dependencies = [
+    # The judge model backend. Gemini is the default; install only what you use.
+    "google-genai>=1.0",        # default Gemini judge
+    "litellm>=1.70",            # for GLM/MiniMax/custom OpenAI-compatible judges
+]
+
+[project.scripts]
+goalguard = "goalguard.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["goalguard"]

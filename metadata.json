@@ -1,0 +1,6 @@
+{
+  "name": "MouthPeace",
+  "description": "Agent fleet command cockpit and safety guard supervisor",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

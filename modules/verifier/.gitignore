@@ -1,0 +1,46 @@
+# Environment
+.env
+.env.*
+!.env.sample
+
+# Node / Bun
+node_modules/
+npm-debug.log*
+.yarn/
+.pnp.*
+.bun/
+bun.lockb
+
+# Build output
+dist/
+build/
+.turbo/
+.cache/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# IDE / editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Governance agent state
+.floyd/
+
+# Verifier runtime artifacts
+.mouthpeace/state/
+.mouthpeace/agent-sessions/
+/tmp/pi-verifier/
+
+# OS
+Thumbs.db
+desktop.ini

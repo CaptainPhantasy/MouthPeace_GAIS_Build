@@ -1,0 +1,216 @@
+#!/usr/bin/env node
+import { constants as fsConstants } from "node:fs";
+import {
+  access,
+  copyFile,
+  mkdir,
+  readFile,
+  realpath,
+  stat,
+} from "node:fs/promises";
+import path from "node:path";
+import process from "node:process";
+import { fileURLToPath } from "node:url";
+
+export const REQUIRED_FILES = [
+  {
+    source: ".mouthpeace/verifier/agents/verifier.md",
+    destination: ".mouthpeace/verifier/agents/verifier.md",
+    overwrite: "block",
+  },
+  {
+    source: ".mouthpeace/verifier/prompts/verify_on_stop.md",
+    destination: ".mouthpeace/verifier/prompts/verify_on_stop.md",
+    overwrite: "block",
+  },
+  {
+    source: ".mouthpeace/verifier/prompts/builder_error.md",
+    destination: ".mouthpeace/verifier/prompts/builder_error.md",
+    overwrite: "block",
+  },
+  {
+    source: ".mouthpeace/settings.json",
+    destination: ".mouthpeace/settings.json",
+    overwrite: "preserve",
+  },
+];
+
+export async function resolveSourceRoot(executablePath = process.argv[1]) {
+  if (!executablePath) {
+    throw new Error("resolveSourceRoot: executable path is required");
+  }
+  const executableRealPath = await realpath(executablePath);
+  return path.dirname(path.dirname(executableRealPath));
+}
+
+async function exists(filePath) {
+  try {
+    await access(filePath, fsConstants.F_OK);
+    return true;
+  } catch (err) {
+    if (err?.code === "ENOENT") return false;
+    throw err;
+  }
+}
+
+async function readIfPresent(filePath) {
+  try {
+    return await readFile(filePath);
+  } catch (err) {
+    if (err?.code === "ENOENT") return undefined;
+    throw err;
+  }
+}
+
+function sameBytes(left, right) {
+  return left.length === right.length && left.equals(right);
+}
+
+async function validateSourceFiles(sourceRoot, manifest) {
+  const missing = [];
+  for (const file of manifest) {
+    const sourcePath = path.join(sourceRoot, file.source);
+    try {
+      const sourceStat = await stat(sourcePath);
+      if (!sourceStat.isFile()) missing.push(file.source);
+    } catch (err) {
+      if (err?.code === "ENOENT") {
+        missing.push(file.source);
+      } else {
+        throw err;
+      }
+    }
+  }
+  if (missing.length > 0) {
+    throw new Error(`Verifier source root is missing required files:\n${missing.map((p) => `  - ${p}`).join("\n")}`);
+  }
+}
+
+export async function installVerifierConfig({
+  sourceRoot,
+  targetRoot = process.cwd(),
+  force = false,
+  manifest = REQUIRED_FILES,
+} = {}) {
+  if (!sourceRoot) throw new Error("installVerifierConfig: sourceRoot is required");
+  await validateSourceFiles(sourceRoot, manifest);
+
+  const copied = [];
+  const skipped = [];
+  const blocked = [];
+
+  for (const file of manifest) {
+    const sourcePath = path.join(sourceRoot, file.source);
+    const destinationPath = path.join(targetRoot, file.destination);
+    const destinationBytes = await readIfPresent(destinationPath);
+
+    if (destinationBytes === undefined) continue;
+
+    if (file.overwrite === "preserve") {
+      skipped.push({ ...file, reason: "preserved" });
+      continue;
+    }
+
+    const sourceBytes = await readFile(sourcePath);
+    if (sameBytes(sourceBytes, destinationBytes)) {
+      skipped.push({ ...file, reason: "identical" });
+      continue;
+    }
+
+    if (!force) {
+      blocked.push({ ...file, reason: "differs" });
+    }
+  }
+
+  if (blocked.length > 0) {
+    return { copied, skipped, blocked };
+  }
+
+  for (const file of manifest) {
+    if (skipped.some((entry) => entry.destination === file.destination)) continue;
+    const sourcePath = path.join(sourceRoot, file.source);
+    const destinationPath = path.join(targetRoot, file.destination);
+    const destinationExists = await exists(destinationPath);
+    if (destinationExists && file.overwrite === "preserve") continue;
+    await mkdir(path.dirname(destinationPath), { recursive: true });
+    await copyFile(sourcePath, destinationPath);
+    copied.push({ ...file });
+  }
+
+  return { copied, skipped, blocked };
+}
+
+function printUsage(stream = process.stdout) {
+  stream.write(`Usage:\n  verify install [--target <dir>] [--force]\n\nCommands:\n  install   Copy Verifier config into the target project (default: cwd).\n\nOptions:\n  --target <dir>  Install into a specific project directory instead of cwd.\n  --force         Overwrite differing verifier persona/prompt files. Existing .mouthpeace/settings.json is still preserved.\n  --help          Show this help.\n`);
+}
+
+function parseInstallArgs(args) {
+  const options = { targetRoot: process.cwd(), force: false };
+  for (let i = 0; i < args.length; i += 1) {
+    const arg = args[i];
+    if (arg === "--force") {
+      options.force = true;
+    } else if (arg === "--target") {
+      const value = args[i + 1];
+      if (!value) throw new Error("--target requires a directory");
+      options.targetRoot = path.resolve(value);
+      i += 1;
+    } else if (arg === "--help" || arg === "-h") {
+      options.help = true;
+    } else {
+      throw new Error(`Unknown option for verify install: ${arg}`);
+    }
+  }
+  return options;
+}
+
+function printInstallResult(result, targetRoot, stream = process.stdout) {
+  stream.write(`Verifier config install target: ${targetRoot}\n`);
+  for (const entry of result.copied) stream.write(`copied   ${entry.destination}\n`);
+  for (const entry of result.skipped) stream.write(`skipped  ${entry.destination} (${entry.reason})\n`);
+  for (const entry of result.blocked) stream.write(`blocked  ${entry.destination} (${entry.reason}; rerun with --force to replace)\n`);
+}
+
+export async function main(argv = process.argv.slice(2), io = { stdout: process.stdout, stderr: process.stderr }) {
+  const [command, ...rest] = argv;
+  if (!command || command === "--help" || command === "-h") {
+    printUsage(io.stdout);
+    return 0;
+  }
+  if (command !== "install") {
+    io.stderr.write(`Unknown command: ${command}\n`);
+    printUsage(io.stderr);
+    return 2;
+  }
+
+  const options = parseInstallArgs(rest);
+  if (options.help) {
+    printUsage(io.stdout);
+    return 0;
+  }
+
+  const sourceRoot = await resolveSourceRoot(process.argv[1]);
+  const result = await installVerifierConfig({
+    sourceRoot,
+    targetRoot: options.targetRoot,
+    force: options.force,
+  });
+  printInstallResult(result, options.targetRoot, io.stdout);
+
+  if (result.blocked.length > 0) {
+    io.stderr.write("Install blocked to avoid overwriting target-specific verifier files.\n");
+    return 2;
+  }
+  return 0;
+}
+
+const currentFile = fileURLToPath(import.meta.url);
+const invokedFile = process.argv[1] ? await realpath(process.argv[1]) : "";
+if (invokedFile === currentFile) {
+  try {
+    process.exitCode = await main();
+  } catch (err) {
+    process.stderr.write(`${err instanceof Error ? err.message : String(err)}\n`);
+    process.exitCode = 1;
+  }
+}

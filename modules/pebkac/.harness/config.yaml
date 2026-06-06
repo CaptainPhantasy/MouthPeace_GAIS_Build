@@ -1,0 +1,16 @@
+# PEBKAC Harness Configuration
+version: "1.0"
+
+defaults:
+  evidence_required: true
+  deterministic_prompting: true
+  secrets_isolation: true
+  git_guard: true
+  checkpoint_interval: 10
+
+# Agent runtime configuration
+# Set to "harness", "claude", or "none" for standalone mode
+agent_runtime: "harness"
+
+# Install defense extension to all platforms
+platforms: all

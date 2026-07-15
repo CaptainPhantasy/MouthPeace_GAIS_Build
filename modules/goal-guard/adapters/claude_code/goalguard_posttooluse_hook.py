@@ -5,8 +5,10 @@ Claude Code invokes this right after each tool call. The Sentinel reads what jus
 happened (tool name + input + result) plus the run's reasoning/transcript, and
 checks for three problems at once: goal DRIFT, DECEPTION (claims the evidence
 doesn't support), and INTENT_VIOLATION (the agent deciding to do something it
-shouldn't). At trust levels that permit it (L2/L3) it blocks and feeds a
-correction back so the run is steered/stopped before it compounds.
+shouldn't). At L3 it blocks and feeds a correction back so the run is steered
+before the issue compounds. At L2 the result remains recorded as an operator
+approval request; PostToolUse cannot turn that request into a human prompt, so
+it must not automatically feed the correction back to Claude.
 
 Cost control: by default it only judges *mutating* tools (writes/edits/shell);
 read-only chatter is skipped. Override with GUARD_SENTINEL_TOOLS.
@@ -84,7 +86,10 @@ def main() -> int:
     correction = result.get("correction") or ""
     problem = result.get("problem", "none")
 
-    if action in ("correct", "ask", "escalate") and correction:
+    # PostToolUse's `decision: block` is model feedback, not an operator prompt.
+    # L2 `ask` therefore stays in the feed and continues; only L3 correction or
+    # escalation is injected back into the run. PreToolUse owns L2 approval.
+    if action in ("correct", "escalate") and correction:
         tag = {"deception": "untruthful output", "intent_violation": "policy bypass",
                "drift": "goal drift"}.get(problem, "issue")
         prefix = f"[Goal Guard — {tag}] "

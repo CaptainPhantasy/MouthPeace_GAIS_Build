@@ -112,8 +112,9 @@ Then `goalguard set "<goal>"` in the project.
   executes.
 - **PostToolUse hook (Sentinel)** — checks *during* the run, right after each tool
   call, for **drift**, **deception** (claims the evidence doesn't support), and
-  **intent-to-violate**. At L2/L3 it blocks and injects a correction before the
-  next step.
+  **intent-to-violate**. At L3 it injects a correction before the next step. At
+  L2 it records the proposed correction without feeding it back automatically;
+  only PreToolUse can present the operator approval prompt.
 - **Stop hook** — gates the *end* of a run: at L2/L3 it blocks the stop and feeds
   a correction back so the run realigns instead of ending drifted (the `/goal`
   pattern). Checks goal drift.

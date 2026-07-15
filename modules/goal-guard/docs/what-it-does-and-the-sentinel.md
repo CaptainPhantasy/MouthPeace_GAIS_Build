@@ -129,10 +129,10 @@ that was never earned.
   sampling, the model‑agnostic judge, a Claude Code **Stop‑hook** adapter, AND
   the **Sentinel**: `sentinel_assess` (drift + deception + intent‑to‑violate),
   `sentinel_checkpoint`, cost throttling, and Claude Code **PostToolUse** and
-  **PreToolUse** adapters. Eight added offline tests cover deception and
-  intent-violation verdicts, trust-level escalation, mutating-tool throttling,
-  and pre-execution permission mapping; the complete module has 16 passing
-  tests.
+  **PreToolUse** adapters. Focused offline tests cover deception and
+  intent-violation verdicts, trust-level escalation, process-safe recovery
+  counting, mutating-tool variants, PostToolUse L2 behavior, and pre-execution
+  permission mapping; they need no API key to run.
 - **Still roadmap — the two honest dependencies that remain:**
   1. **It can only read reasoning the harness exposes.** If a harness writes the
      model's thinking to its transcript/log, the Sentinel sees it; if a harness
@@ -141,7 +141,9 @@ that was never earned.
   2. **Pre‑execution denial — now built.** A **PreToolUse** adapter judges the
      *pending* tool call before it runs and, by trust level, **denies** it (L3),
      **asks** you to approve (L2), or allows + logs (L0/L1). Unit tests verify the
-     L3 denial and L2 approval mappings. The remaining roadmap piece is the literal
+     L3 denial and L2 approval mappings. PostToolUse cannot open that approval
+     prompt, so its L2 result is recorded without automatically feeding a
+     correction to the model. The remaining roadmap piece is the literal
      "active trip‑wire" — the guardian itself invoking a gating tool/check so a
      *separate* hook fires on its call — kept behind the trust ladder so it starts
      in Shadow and earns authority over time.

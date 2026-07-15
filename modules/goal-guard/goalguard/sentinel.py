@@ -14,7 +14,7 @@ import os
 DEFAULT_MUTATING = {
     "bash", "shell", "run", "exec", "execute",
     "write", "edit", "multiedit", "replace", "str_replace", "apply_patch",
-    "notebookedit", "create", "delete", "remove", "move", "rename",
+    "notebookedit", "create", "update", "delete", "remove", "move", "rename",
 }
 
 

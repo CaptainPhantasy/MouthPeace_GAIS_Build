@@ -1,0 +1,4 @@
+# Synthetic values used to prove the PEBKAC redactor catches these formats.
+a626d9d203e83445c069511fe55f401fc564d37f:modules/pebkac/test/redaction.test.js:generic-api-key:35
+a626d9d203e83445c069511fe55f401fc564d37f:modules/pebkac/test/redaction.test.js:jwt:30
+a626d9d203e83445c069511fe55f401fc564d37f:modules/pebkac/test/redaction.test.js:private-key:34

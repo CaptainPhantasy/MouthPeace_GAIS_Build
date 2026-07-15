@@ -1,4 +1,12 @@
-import { Activity, AlertCircle, BarChart3, Database, Server, Star, Zap } from "lucide-react";
+import {
+	Activity,
+	AlertCircle,
+	BarChart3,
+	Database,
+	Server,
+	Star,
+	Zap,
+} from "lucide-react";
 import type { AggregatedStats } from "../types";
 
 interface StatsGridProps {
@@ -22,7 +30,9 @@ const statConfig = [
 		color: "var(--accent-pink)",
 		getValue: (s: AggregatedStats) => `$${s.totalCost.toFixed(2)}`,
 		getDetail: (s: AggregatedStats) =>
-			s.totalRequests > 0 ? `$${(s.totalCost / s.totalRequests).toFixed(4)} avg/req` : "-",
+			s.totalRequests > 0
+				? `$${(s.totalCost / s.totalRequests).toFixed(4)} avg/req`
+				: "-",
 	},
 	{
 		key: "premiumRequests",
@@ -31,7 +41,9 @@ const statConfig = [
 		color: "var(--accent-amber)",
 		getValue: (s: AggregatedStats) => s.totalPremiumRequests.toLocaleString(),
 		getDetail: (s: AggregatedStats) =>
-			s.totalRequests > 0 ? `${((s.totalPremiumRequests / s.totalRequests) * 100).toFixed(1)}% of requests` : "-",
+			s.totalRequests > 0
+				? `${((s.totalPremiumRequests / s.totalRequests) * 100).toFixed(1)}% of requests`
+				: "-",
 	},
 	{
 		key: "cache",
@@ -39,7 +51,8 @@ const statConfig = [
 		icon: Database,
 		color: "var(--accent-cyan)",
 		getValue: (s: AggregatedStats) => `${(s.cacheRate * 100).toFixed(1)}%`,
-		getDetail: (s: AggregatedStats) => `${(s.totalCacheReadTokens / 1000).toFixed(1)}k cached tokens`,
+		getDetail: (s: AggregatedStats) =>
+			`${(s.totalCacheReadTokens / 1000).toFixed(1)}k cached tokens`,
 	},
 	{
 		key: "errors",
@@ -47,7 +60,8 @@ const statConfig = [
 		icon: AlertCircle,
 		color: "var(--accent-red)",
 		getValue: (s: AggregatedStats) => `${(s.errorRate * 100).toFixed(1)}%`,
-		getDetail: (s: AggregatedStats) => `${s.failedRequests.toLocaleString()} failed requests`,
+		getDetail: (s: AggregatedStats) =>
+			`${s.failedRequests.toLocaleString()} failed requests`,
 	},
 	{
 		key: "tokens",
@@ -55,14 +69,16 @@ const statConfig = [
 		icon: BarChart3,
 		color: "var(--accent-green)",
 		getValue: (s: AggregatedStats) => s.avgTokensPerSecond?.toFixed(1) ?? "-",
-		getDetail: (s: AggregatedStats) => `${(s.totalInputTokens + s.totalOutputTokens).toLocaleString()} total tokens`,
+		getDetail: (s: AggregatedStats) =>
+			`${(s.totalInputTokens + s.totalOutputTokens).toLocaleString()} total tokens`,
 	},
 	{
 		key: "ttft",
 		title: "TTFT",
 		icon: Zap,
 		color: "var(--accent-amber)",
-		getValue: (s: AggregatedStats) => (s.avgTtft ? `${(s.avgTtft / 1000).toFixed(2)}s` : "-"),
+		getValue: (s: AggregatedStats) =>
+			s.avgTtft ? `${(s.avgTtft / 1000).toFixed(2)}s` : "-",
 		getDetail: () => "Time to first token",
 	},
 ];
@@ -70,12 +86,14 @@ const statConfig = [
 export function StatsGrid({ stats }: StatsGridProps) {
 	return (
 		<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4 mb-8">
-			{statConfig.map(stat => {
+			{statConfig.map((stat) => {
 				const Icon = stat.icon;
 				return (
 					<div key={stat.key} className="stat-card group">
 						<div className="flex items-center justify-between mb-3">
-							<span className="text-sm font-medium text-[var(--text-secondary)]">{stat.title}</span>
+							<span className="text-sm font-medium text-[var(--text-secondary)]">
+								{stat.title}
+							</span>
 							<div
 								className="p-2 rounded-[var(--radius-sm)] transition-colors"
 								style={{ backgroundColor: `${stat.color}15` }}
@@ -87,8 +105,12 @@ export function StatsGrid({ stats }: StatsGridProps) {
 								/>
 							</div>
 						</div>
-						<div className="text-2xl font-bold text-[var(--text-primary)] mb-1">{stat.getValue(stats)}</div>
-						<div className="text-xs text-[var(--text-muted)] truncate">{stat.getDetail(stats)}</div>
+						<div className="text-2xl font-bold text-[var(--text-primary)] mb-1">
+							{stat.getValue(stats)}
+						</div>
+						<div className="text-xs text-[var(--text-muted)] truncate">
+							{stat.getDetail(stats)}
+						</div>
 					</div>
 				);
 			})}

@@ -14,7 +14,7 @@ plus thin adapters). Default trust level is **L0 = Shadow: it changes nothing.**
 ## 1. Install (once)
 
 ```bash
-cd modules/goal-guard     # from the repo root
+cd modules/goal-guard     # from the repository root
 pip install -e .          # gives you the `goalguard` command
 ```
 
@@ -59,7 +59,7 @@ goalguard feed
 
 Example feed entry it produces:
 
-```
+```text
 👁️  observe  [major]
     why: Rewriting auth is unrelated to adding a CSV export button.
     fix: Stop the auth refactor and return to the CSV export button.
@@ -80,28 +80,49 @@ few real runs; when it's consistently right, promote it.
 Demote anytime (`goalguard level 0`). Remove entirely: delete the `.goalguard/`
 folder and the hook — no other trace.
 
-## 5. Wire it into the coding agent (auto-correct on stop)
+## 5. Wire it into Claude Code
 
-Add to the agent's hook configuration (use the absolute path to the installed script):
+Two adapters — use either or both. Add them to `.claude/settings.json` using
+the absolute path to your checkout:
 
 ```json
 {
   "hooks": {
     "Stop": [
       { "hooks": [ { "type": "command",
-        "command": "python3 /absolute/path/to/goal-guard/adapters/claude_code/goalguard_stop_hook.py" } ] }
+        "command": "python3 /absolute/path/to/modules/goal-guard/adapters/claude_code/goalguard_stop_hook.py" } ] }
+    ],
+    "PreToolUse": [
+      { "hooks": [ { "type": "command",
+        "command": "python3 /absolute/path/to/modules/goal-guard/adapters/claude_code/goalguard_pretooluse_hook.py" } ] }
+    ],
+    "PostToolUse": [
+      { "hooks": [ { "type": "command",
+        "command": "python3 /absolute/path/to/modules/goal-guard/adapters/claude_code/goalguard_posttooluse_hook.py" } ] }
     ]
   }
 }
 ```
 
-Then `goalguard set "<goal>"` in the project. Now when a coding agent run tries to
-stop, the guard checks it; at **L2/L3** it blocks the stop and feeds the
-correction back so the run realigns instead of ending drifted. At L0/L1 it just
-logs. It **fails open** — if the guard errors, your run is never blocked.
+Then `goalguard set "<goal>"` in the project.
 
-Other agent harnesses use the same core via their own thin adapters (one small
-adapter file per harness).
+- **PreToolUse hook (Sentinel, pre-execution)** — judges the *pending* tool call
+  before it runs and, by level, **denies it (L3), asks you to approve (L2)**, or
+  allows + logs (L0/L1). This is the hard gate: a dangerous/off-goal call never
+  executes.
+- **PostToolUse hook (Sentinel)** — checks *during* the run, right after each tool
+  call, for **drift**, **deception** (claims the evidence doesn't support), and
+  **intent-to-violate**. At L3 it injects a correction before the next step. At
+  L2 it records the proposed correction without feeding it back automatically;
+  only PreToolUse can present the operator approval prompt.
+- **Stop hook** — gates the *end* of a run: at L2/L3 it blocks the stop and feeds
+  a correction back so the run realigns instead of ending drifted (the `/goal`
+  pattern). Checks goal drift.
+
+The PreToolUse and PostToolUse adapters throttle to *mutating* tools by default
+(override `GUARD_SENTINEL_TOOLS`). All three adapters **fail open** — if the
+guard errors, your run is never blocked. Other harnesses can use the same core
+through their own thin adapters.
 
 ## 6. Optional: the ping
 
@@ -115,9 +136,11 @@ export GUARD_MACOS_NOTIFY=1                                                 # ma
 
 ## Commands
 
-```
+```text
 goalguard set "<goal>"        anchor the goal for this run
 goalguard checkpoint [...]    run one drift check (prints JSON)
+goalguard sentinel [...]      run one sentinel check: drift + deception + intent
+
 goalguard feed [--limit N]    show recent activity (the visible artifact)
 goalguard level [0-3]         get/set the trust level
 goalguard status              goal, level, recovery state
@@ -133,5 +156,6 @@ goalguard reset               clear the anchor
 | `GUARD_LLM_MODEL` | per provider | override judge model |
 | `GUARD_LEVEL` | `0` | trust level (env overrides config) |
 | `GUARD_MAX_RECOVERIES` | `2` | auto-correct attempts before escalating |
+| `GUARD_SENTINEL_TOOLS` | mutating tools | comma-separated allowlist of tools the PostToolUse Sentinel judges |
 | `GUARD_NOTIFY_CMD` | — | shell command for the ping (`$GUARD_MESSAGE` set) |
 | `GUARD_MACOS_NOTIFY` | — | `1` to show a macOS banner on escalation |

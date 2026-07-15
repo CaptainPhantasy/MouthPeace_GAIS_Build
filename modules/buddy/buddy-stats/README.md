@@ -66,6 +66,19 @@ console.log(stats.byModel[0].avgTokensPerSecond);
 
 - **Session logs**: `~/.mouthpeace/agent/sessions/` (JSONL files)
 - **Stats database**: `~/.mouthpeace/stats.db` (SQLite)
+- **Override for isolated runs**: set `MOUTHPEACE_CONFIG_DIR` to another root.
+
+## Development
+
+This package is self-contained in the GAIS repository; it does not require the
+upstream MouthPeace workspace packages. Install and run its complete gate with:
+
+```bash
+bun install
+bun run check
+bun test
+bun run build
+```
 
 ## Dashboard
 

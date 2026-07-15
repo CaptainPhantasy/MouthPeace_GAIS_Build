@@ -31,6 +31,17 @@ def cmd_checkpoint(args) -> int:
     return 0
 
 
+def cmd_sentinel(args) -> int:
+    result = guard.sentinel_checkpoint(
+        _project(args),
+        transcript=args.transcript,
+        recent_action=args.action,
+        activity=args.activity,
+    )
+    print(json.dumps(result))
+    return 0
+
+
 def cmd_feed(args) -> int:
     print(feed.render(_project(args), limit=args.limit))
     return 0
@@ -80,6 +91,12 @@ def build_parser() -> argparse.ArgumentParser:
     c.add_argument("--transcript", help="Path to a run transcript/log to sample.")
     c.add_argument("--activity", help="Free-text description of current activity.")
     c.set_defaults(func=cmd_checkpoint)
+
+    se = sub.add_parser("sentinel", help="Run one mid-run sentinel check (drift/deception/intent).")
+    se.add_argument("--transcript", help="Path to a run transcript/log to sample.")
+    se.add_argument("--action", help="Short description of the tool call that just ran.")
+    se.add_argument("--activity", help="Free-text description of current activity.")
+    se.set_defaults(func=cmd_sentinel)
 
     f = sub.add_parser("feed", help="Show recent Goal Guard activity.")
     f.add_argument("--limit", type=int, default=20)

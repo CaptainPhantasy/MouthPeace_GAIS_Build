@@ -15,7 +15,11 @@ import {
 	insertMessageStats,
 	setFileOffset,
 } from "./db";
-import { getSessionEntry, listAllSessionFiles, parseSessionFile } from "./parser";
+import {
+	getSessionEntry,
+	listAllSessionFiles,
+	parseSessionFile,
+} from "./parser";
 import type { DashboardStats, MessageStats, RequestDetails } from "./types";
 
 /**
@@ -57,7 +61,10 @@ async function syncSessionFile(sessionFile: string): Promise<number> {
  * Sync all session files to the database.
  * Returns the number of new entries processed.
  */
-export async function syncAllSessions(): Promise<{ processed: number; files: number }> {
+export async function syncAllSessions(): Promise<{
+	processed: number;
+	files: number;
+}> {
 	await initDb();
 
 	const files = await listAllSessionFiles();
@@ -91,7 +98,9 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 	};
 }
 
-export async function getRecentRequests(limit?: number): Promise<MessageStats[]> {
+export async function getRecentRequests(
+	limit?: number,
+): Promise<MessageStats[]> {
 	await initDb();
 	return dbGetRecentRequests(limit);
 }
@@ -101,13 +110,15 @@ export async function getRecentErrors(limit?: number): Promise<MessageStats[]> {
 	return dbGetRecentErrors(limit);
 }
 
-export async function getRequestDetails(id: number): Promise<RequestDetails | null> {
+export async function getRequestDetails(
+	id: number,
+): Promise<RequestDetails | null> {
 	await initDb();
 	const msg = getMessageById(id);
 	if (!msg) return null;
 
 	const entry = await getSessionEntry(msg.sessionFile, msg.entryId);
-	if (!entry || entry.type !== "message") return null;
+	if (entry?.type !== "message" || !("message" in entry)) return null;
 
 	// TODO: Get parent/context messages?
 	// For now we return the single entry which contains the assistant response.
@@ -116,7 +127,7 @@ export async function getRequestDetails(id: number): Promise<RequestDetails | nu
 	return {
 		...msg,
 		messages: [entry],
-		output: (entry as any).message,
+		output: entry.message,
 	};
 }
 

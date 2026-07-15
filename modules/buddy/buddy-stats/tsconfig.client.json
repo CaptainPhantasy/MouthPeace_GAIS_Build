@@ -1,21 +1,10 @@
 {
-	"extends": "../tsconfig.workspace.json",
-	"include": [
-		"src/client"
-	],
+	"extends": "./tsconfig.base.json",
+	"include": ["src/client"],
 	"compilerOptions": {
 		"jsx": "react-jsx",
-		"lib": [
-			"ES2024",
-			"DOM",
-			"DOM.Iterable"
-		],
+		"lib": ["ES2024", "DOM", "DOM.Iterable"],
 		"noEmit": true,
-		"types": [
-			"bun",
-			"assets",
-			"react",
-			"react-dom"
-		]
+		"types": ["bun", "react", "react-dom"]
 	}
 }

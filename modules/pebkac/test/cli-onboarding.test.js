@@ -39,7 +39,7 @@ describe("CLI onboarding", () => {
 
       expect(result.exitCode, stderr).toBe(0);
       expect(stdout).toContain("PEBKAC init complete");
-      expect(existsSync(join(cwd, ".omp", "extensions", "pebkac-defense.js"))).toBe(true);
+      expect(existsSync(join(cwd, ".mouthpeace", "extensions", "pebkac-defense.js"))).toBe(true);
       expect(existsSync(join(cwd, ".harness", "config.yaml"))).toBe(true);
       expect(existsSync(join(cwd, ".harness", "state", "onboarding-preferences.json"))).toBe(true);
       expect(existsSync(join(cwd, ".harness", "state", "telemetry-consent.json"))).toBe(true);

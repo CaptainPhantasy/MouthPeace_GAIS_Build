@@ -1,6 +1,6 @@
 import { Database } from "bun:sqlite";
 import * as fs from "node:fs/promises";
-import { getConfigRootDir, getStatsDbPath } from "@mouthpeace/pi-utils";
+import { getConfigRootDir, getStatsDbPath } from "./runtime";
 import type {
 	AggregatedStats,
 	FolderStats,
@@ -14,6 +14,77 @@ import type {
 const DB_PATH = getStatsDbPath();
 
 let db: Database | null = null;
+
+interface AggregateRow {
+	total_requests: number | null;
+	failed_requests: number | null;
+	total_input_tokens: number | null;
+	total_output_tokens: number | null;
+	total_cache_read_tokens: number | null;
+	total_cache_write_tokens: number | null;
+	total_premium_requests: number | null;
+	total_cost: number | null;
+	avg_duration: number | null;
+	avg_ttft: number | null;
+	avg_tokens_per_second: number | null;
+	first_timestamp: number | null;
+	last_timestamp: number | null;
+}
+
+interface ModelAggregateRow extends AggregateRow {
+	model: string;
+	provider: string;
+}
+
+interface FolderAggregateRow extends AggregateRow {
+	folder: string;
+}
+
+interface TimeSeriesRow {
+	bucket: number;
+	requests: number;
+	errors: number;
+	tokens: number;
+	cost: number;
+}
+
+interface ModelTimeSeriesRow {
+	bucket: number;
+	model: string;
+	provider: string;
+	requests: number;
+}
+
+interface ModelPerformanceRow extends ModelTimeSeriesRow {
+	avg_ttft: number | null;
+	avg_tokens_per_second: number | null;
+}
+
+interface MessageRow {
+	id: number;
+	session_file: string;
+	entry_id: string;
+	folder: string;
+	model: string;
+	provider: string;
+	api: string;
+	timestamp: number;
+	duration: number | null;
+	ttft: number | null;
+	stop_reason: string;
+	error_message: string | null;
+	input_tokens: number;
+	output_tokens: number;
+	cache_read_tokens: number;
+	cache_write_tokens: number;
+	total_tokens: number;
+	premium_requests: number | null;
+	cost_input: number;
+	cost_output: number;
+	cost_cache_read: number;
+	cost_cache_write: number;
+	cost_total: number;
+}
 
 /**
  * Initialize the database and create tables.
@@ -68,22 +139,34 @@ export async function initDb(): Promise<Database> {
 		);
 	`);
 
-	const messageColumns = db.prepare("PRAGMA table_info(messages)").all() as { name: string }[];
-	if (!messageColumns.some(column => column.name === "premium_requests")) {
-		db.exec("ALTER TABLE messages ADD COLUMN premium_requests REAL NOT NULL DEFAULT 0");
+	const messageColumns = db.prepare("PRAGMA table_info(messages)").all() as {
+		name: string;
+	}[];
+	if (!messageColumns.some((column) => column.name === "premium_requests")) {
+		db.exec(
+			"ALTER TABLE messages ADD COLUMN premium_requests REAL NOT NULL DEFAULT 0",
+		);
 	}
-	db.exec("UPDATE messages SET premium_requests = 0 WHERE premium_requests IS NULL");
+	db.exec(
+		"UPDATE messages SET premium_requests = 0 WHERE premium_requests IS NULL",
+	);
 	return db;
 }
 
 /**
  * Get the stored offset for a session file.
  */
-export function getFileOffset(sessionFile: string): { offset: number; lastModified: number } | null {
+export function getFileOffset(
+	sessionFile: string,
+): { offset: number; lastModified: number } | null {
 	if (!db) return null;
 
-	const stmt = db.prepare("SELECT offset, last_modified FROM file_offsets WHERE session_file = ?");
-	const row = stmt.get(sessionFile) as { offset: number; last_modified: number } | undefined;
+	const stmt = db.prepare(
+		"SELECT offset, last_modified FROM file_offsets WHERE session_file = ?",
+	);
+	const row = stmt.get(sessionFile) as
+		| { offset: number; last_modified: number }
+		| undefined;
 
 	return row ? { offset: row.offset, lastModified: row.last_modified } : null;
 }
@@ -91,7 +174,11 @@ export function getFileOffset(sessionFile: string): { offset: number; lastModifi
 /**
  * Update the stored offset for a session file.
  */
-export function setFileOffset(sessionFile: string, offset: number, lastModified: number): void {
+export function setFileOffset(
+	sessionFile: string,
+	offset: number,
+	lastModified: number,
+): void {
 	if (!db) return;
 
 	const stmt = db.prepare(`
@@ -154,7 +241,7 @@ export function insertMessageStats(stats: MessageStats[]): number {
 /**
  * Build aggregated stats from query results.
  */
-function buildAggregatedStats(rows: any[]): AggregatedStats {
+function buildAggregatedStats(rows: AggregateRow[]): AggregatedStats {
 	if (rows.length === 0) {
 		return {
 			totalRequests: 0,
@@ -231,7 +318,7 @@ export function getOverallStats(): AggregatedStats {
 		FROM messages
 	`);
 
-	const rows = stmt.all();
+	const rows = stmt.all() as AggregateRow[];
 	return buildAggregatedStats(rows);
 }
 
@@ -263,8 +350,8 @@ export function getStatsByModel(): ModelStats[] {
 		ORDER BY total_requests DESC
 	`);
 
-	const rows = stmt.all() as any[];
-	return rows.map(row => ({
+	const rows = stmt.all() as ModelAggregateRow[];
+	return rows.map((row) => ({
 		model: row.model,
 		provider: row.provider,
 		...buildAggregatedStats([row]),
@@ -298,8 +385,8 @@ export function getStatsByFolder(): FolderStats[] {
 		ORDER BY total_requests DESC
 	`);
 
-	const rows = stmt.all() as any[];
-	return rows.map(row => ({
+	const rows = stmt.all() as FolderAggregateRow[];
+	return rows.map((row) => ({
 		folder: row.folder,
 		...buildAggregatedStats([row]),
 	}));
@@ -326,8 +413,8 @@ export function getTimeSeries(hours = 24): TimeSeriesPoint[] {
 		ORDER BY bucket ASC
 	`);
 
-	const rows = stmt.all(cutoff) as any[];
-	return rows.map(row => ({
+	const rows = stmt.all(cutoff) as TimeSeriesRow[];
+	return rows.map((row) => ({
 		timestamp: row.bucket,
 		requests: row.requests,
 		errors: row.errors,
@@ -359,8 +446,8 @@ export function getModelTimeSeries(days = 14): ModelTimeSeriesPoint[] {
 		ORDER BY bucket ASC
 	`);
 
-	const rows = stmt.all(cutoff) as any[];
-	return rows.map(row => ({
+	const rows = stmt.all(cutoff) as ModelTimeSeriesRow[];
+	return rows.map((row) => ({
 		timestamp: row.bucket,
 		model: row.model,
 		provider: row.provider,
@@ -390,8 +477,8 @@ export function getModelPerformanceSeries(days = 14): ModelPerformancePoint[] {
 		ORDER BY bucket ASC
 	`);
 
-	const rows = stmt.all(cutoff) as any[];
-	return rows.map(row => ({
+	const rows = stmt.all(cutoff) as ModelPerformanceRow[];
+	return rows.map((row) => ({
 		timestamp: row.bucket,
 		model: row.model,
 		provider: row.provider,
@@ -421,7 +508,7 @@ export function closeDb(): void {
 	}
 }
 
-function rowToMessageStats(row: any): MessageStats {
+function rowToMessageStats(row: MessageRow): MessageStats {
 	return {
 		id: row.id,
 		sessionFile: row.session_file,
@@ -433,7 +520,7 @@ function rowToMessageStats(row: any): MessageStats {
 		timestamp: row.timestamp,
 		duration: row.duration,
 		ttft: row.ttft,
-		stopReason: row.stop_reason as any,
+		stopReason: row.stop_reason,
 		errorMessage: row.error_message,
 		usage: {
 			input: row.input_tokens,
@@ -460,7 +547,7 @@ export function getRecentRequests(limit = 100): MessageStats[] {
 		ORDER BY timestamp DESC 
 		LIMIT ?
 	`);
-	return (stmt.all(limit) as any[]).map(rowToMessageStats);
+	return (stmt.all(limit) as MessageRow[]).map(rowToMessageStats);
 }
 
 export function getRecentErrors(limit = 100): MessageStats[] {
@@ -471,12 +558,12 @@ export function getRecentErrors(limit = 100): MessageStats[] {
 		ORDER BY timestamp DESC 
 		LIMIT ?
 	`);
-	return (stmt.all(limit) as any[]).map(rowToMessageStats);
+	return (stmt.all(limit) as MessageRow[]).map(rowToMessageStats);
 }
 
 export function getMessageById(id: number): MessageStats | null {
 	if (!db) return null;
 	const stmt = db.prepare("SELECT * FROM messages WHERE id = ?");
-	const row = stmt.get(id);
+	const row = stmt.get(id) as MessageRow | null;
 	return row ? rowToMessageStats(row) : null;
 }

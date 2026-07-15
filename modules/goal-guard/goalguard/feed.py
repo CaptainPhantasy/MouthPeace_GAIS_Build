@@ -68,6 +68,9 @@ def render(project_dir: str | os.PathLike, limit: int = 20) -> str:
             sev = e.get("severity")
             if sev and sev != "none":
                 line += f"  [{sev}]"
+            problem = e.get("problem")
+            if problem and problem != "none":
+                line += f"  <{problem}>"
             if e.get("evidence"):
                 line += f"\n        why: {e['evidence'][:160]}"
             if e.get("correction") and kind not in ("ok",):

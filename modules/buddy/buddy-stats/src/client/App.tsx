@@ -20,7 +20,11 @@ export default function App() {
 
 	const loadData = useCallback(async () => {
 		try {
-			const [s, r, e] = await Promise.all([getStats(), getRecentRequests(50), getRecentErrors(50)]);
+			const [s, r, e] = await Promise.all([
+				getStats(),
+				getRecentRequests(50),
+				getRecentErrors(50),
+			]);
 			setStats(s);
 			setRecentRequests(r);
 			setRecentErrors(e);
@@ -59,7 +63,12 @@ export default function App() {
 	return (
 		<div className="min-h-screen">
 			<div className="max-w-[1600px] mx-auto px-6 py-6">
-				<Header activeTab={activeTab} onTabChange={setActiveTab} onSync={handleSync} syncing={syncing} />
+				<Header
+					activeTab={activeTab}
+					onTabChange={setActiveTab}
+					onSync={handleSync}
+					syncing={syncing}
+				/>
 
 				{activeTab === "overview" && (
 					<div className="space-y-6 animate-fade-in">
@@ -69,12 +78,12 @@ export default function App() {
 							<RequestList
 								title="Recent Requests"
 								requests={recentRequests.slice(0, 10)}
-								onSelect={r => r.id && setSelectedRequest(r.id)}
+								onSelect={(r) => r.id && setSelectedRequest(r.id)}
 							/>
 							<RequestList
 								title="Recent Errors"
 								requests={recentErrors.slice(0, 10)}
-								onSelect={r => r.id && setSelectedRequest(r.id)}
+								onSelect={(r) => r.id && setSelectedRequest(r.id)}
 							/>
 						</div>
 					</div>
@@ -85,7 +94,7 @@ export default function App() {
 						<RequestList
 							title="All Recent Requests"
 							requests={recentRequests}
-							onSelect={r => r.id && setSelectedRequest(r.id)}
+							onSelect={(r) => r.id && setSelectedRequest(r.id)}
 						/>
 					</div>
 				)}
@@ -95,7 +104,7 @@ export default function App() {
 						<RequestList
 							title="Failed Requests"
 							requests={recentErrors}
-							onSelect={r => r.id && setSelectedRequest(r.id)}
+							onSelect={(r) => r.id && setSelectedRequest(r.id)}
 						/>
 					</div>
 				)}
@@ -103,12 +112,18 @@ export default function App() {
 				{activeTab === "models" && (
 					<div className="space-y-6 animate-fade-in">
 						<ChartsContainer modelSeries={stats.modelSeries} />
-						<ModelsTable models={stats.byModel} performanceSeries={stats.modelPerformanceSeries} />
+						<ModelsTable
+							models={stats.byModel}
+							performanceSeries={stats.modelPerformanceSeries}
+						/>
 					</div>
 				)}
 
 				{selectedRequest !== null && (
-					<RequestDetail id={selectedRequest} onClose={() => setSelectedRequest(null)} />
+					<RequestDetail
+						id={selectedRequest}
+						onClose={() => setSelectedRequest(null)}
+					/>
 				)}
 			</div>
 		</div>

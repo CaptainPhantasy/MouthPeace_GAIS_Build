@@ -126,18 +126,27 @@ that was never earned.
 ## Honest status: built vs. roadmap
 
 - **Built today:** the anchor → judge → trust‑ladder → feed core, transcript
-  sampling, the model‑agnostic judge, and a coding agent **Stop‑hook** adapter
-  (verified live catching a real drift and injecting a correction).
-- **The Sentinel is a natural extension, not magic, and has two honest
-  dependencies:**
+  sampling, the model‑agnostic judge, a Claude Code **Stop‑hook** adapter, AND
+  the **Sentinel**: `sentinel_assess` (drift + deception + intent‑to‑violate),
+  `sentinel_checkpoint`, cost throttling, and Claude Code **PostToolUse** and
+  **PreToolUse** adapters. Focused offline tests cover deception and
+  intent-violation verdicts, trust-level escalation, process-safe recovery
+  counting, mutating-tool variants, PostToolUse L2 behavior, and pre-execution
+  permission mapping; they need no API key to run.
+- **Still roadmap — the two honest dependencies that remain:**
   1. **It can only read reasoning the harness exposes.** If a harness writes the
      model's thinking to its transcript/log, the Sentinel sees it; if a harness
      hides reasoning, the Sentinel falls back to actions + claims only. Its power
      scales with how much of the thought stream it's allowed to read.
-  2. **Intent‑time catching needs a mid‑run hook**, not just Stop — a PostToolUse
-     / streaming adapter that checkpoints *during* the run, so it reads the
-     thought before the action lands. The Stop hook gates the finish; the Sentinel
-     wants to gate the moment. Same core, a second adapter.
+  2. **Pre‑execution denial — now built.** A **PreToolUse** adapter judges the
+     *pending* tool call before it runs and, by trust level, **denies** it (L3),
+     **asks** you to approve (L2), or allows + logs (L0/L1). Unit tests verify the
+     L3 denial and L2 approval mappings. PostToolUse cannot open that approval
+     prompt, so its L2 result is recorded without automatically feeding a
+     correction to the model. The remaining roadmap piece is the literal
+     "active trip‑wire" — the guardian itself invoking a gating tool/check so a
+     *separate* hook fires on its call — kept behind the trust ladder so it starts
+     in Shadow and earns authority over time.
 
 The "active trip‑wire" (the guardian performing the call that fires the proper
 hook) is the most powerful piece and the one to build deliberately — with the

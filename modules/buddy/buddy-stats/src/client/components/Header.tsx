@@ -11,7 +11,12 @@ interface HeaderProps {
 
 const tabs: Tab[] = ["overview", "requests", "errors", "models"];
 
-export function Header({ activeTab, onTabChange, onSync, syncing }: HeaderProps) {
+export function Header({
+	activeTab,
+	onTabChange,
+	onSync,
+	syncing,
+}: HeaderProps) {
 	return (
 		<header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-8 border-b border-[var(--border-subtle)]">
 			<div className="flex items-center gap-3">
@@ -19,14 +24,18 @@ export function Header({ activeTab, onTabChange, onSync, syncing }: HeaderProps)
 					<Activity className="w-5 h-5 text-white" />
 				</div>
 				<div>
-					<h1 className="text-xl font-semibold text-[var(--text-primary)]">AI Usage</h1>
-					<p className="text-sm text-[var(--text-muted)]">Statistics & Analytics</p>
+					<h1 className="text-xl font-semibold text-[var(--text-primary)]">
+						AI Usage
+					</h1>
+					<p className="text-sm text-[var(--text-muted)]">
+						Statistics & Analytics
+					</p>
 				</div>
 			</div>
 
 			<div className="flex items-center gap-3">
 				<div className="flex bg-[var(--bg-surface)] rounded-[var(--radius-md)] p-1 border border-[var(--border-subtle)]">
-					{tabs.map(tab => (
+					{tabs.map((tab) => (
 						<button
 							key={tab}
 							type="button"
@@ -38,7 +47,12 @@ export function Header({ activeTab, onTabChange, onSync, syncing }: HeaderProps)
 					))}
 				</div>
 
-				<button type="button" onClick={onSync} disabled={syncing} className="btn btn-primary">
+				<button
+					type="button"
+					onClick={onSync}
+					disabled={syncing}
+					className="btn btn-primary"
+				>
 					<RefreshCw size={16} className={syncing ? "spin" : ""} />
 					{syncing ? "Syncing..." : "Sync"}
 				</button>

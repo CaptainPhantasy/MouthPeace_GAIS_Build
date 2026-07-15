@@ -15,7 +15,16 @@ import { Line } from "react-chartjs-2";
 import type { ModelTimeSeriesPoint } from "../types";
 import { useSystemTheme } from "../useSystemTheme";
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
+ChartJS.register(
+	CategoryScale,
+	LinearScale,
+	PointElement,
+	LineElement,
+	Title,
+	Tooltip,
+	Legend,
+	Filler,
+);
 
 const MODEL_COLORS = [
 	"#a78bfa", // violet
@@ -52,14 +61,17 @@ interface ChartsContainerProps {
 }
 
 export function ChartsContainer({ modelSeries }: ChartsContainerProps) {
-	const chartData = useMemo(() => buildModelPreferenceSeries(modelSeries), [modelSeries]);
+	const chartData = useMemo(
+		() => buildModelPreferenceSeries(modelSeries),
+		[modelSeries],
+	);
 	const theme = useSystemTheme();
 	const chartTheme = CHART_THEMES[theme];
 	const data = {
-		labels: chartData.data.map(d => format(new Date(d.timestamp), "MMM d")),
+		labels: chartData.data.map((d) => format(new Date(d.timestamp), "MMM d")),
 		datasets: chartData.series.map((seriesName, index) => ({
 			label: seriesName,
-			data: chartData.data.map(d => d[seriesName] ?? 0),
+			data: chartData.data.map((d) => d[seriesName] ?? 0),
 			borderColor: MODEL_COLORS[index % MODEL_COLORS.length],
 			backgroundColor: `${MODEL_COLORS[index % MODEL_COLORS.length]}20`,
 			fill: true,
@@ -98,7 +110,10 @@ export function ChartsContainer({ modelSeries }: ChartsContainerProps) {
 				padding: 12,
 				cornerRadius: 8,
 				callbacks: {
-					label: (context: { dataset: { label?: string }; parsed: { y: number | null } }) => {
+					label: (context: {
+						dataset: { label?: string };
+						parsed: { y: number | null };
+					}) => {
 						const label = context.dataset.label ?? "";
 						const value = context.parsed.y;
 						return `${label}: ${(value ?? 0).toFixed(1)}%`;
@@ -136,8 +151,12 @@ export function ChartsContainer({ modelSeries }: ChartsContainerProps) {
 	return (
 		<div className="surface overflow-hidden">
 			<div className="px-5 py-4 border-b border-[var(--border-subtle)]">
-				<h3 className="text-sm font-semibold text-[var(--text-primary)]">Model Preference</h3>
-				<p className="text-xs text-[var(--text-muted)] mt-1">Share of requests over the last 14 days</p>
+				<h3 className="text-sm font-semibold text-[var(--text-primary)]">
+					Model Preference
+				</h3>
+				<p className="text-xs text-[var(--text-muted)] mt-1">
+					Share of requests over the last 14 days
+				</p>
 			</div>
 			<div className="p-5 min-h-[320px]">
 				{chartData.data.length === 0 ? (
@@ -163,20 +182,29 @@ function buildModelPreferenceSeries(
 } {
 	if (points.length === 0) return { data: [], series: [] };
 
-	const totals = new Map<string, { model: string; provider: string; total: number }>();
+	const totals = new Map<
+		string,
+		{ model: string; provider: string; total: number }
+	>();
 	for (const point of points) {
 		const key = `${point.model}::${point.provider}`;
 		const existing = totals.get(key);
 		if (existing) {
 			existing.total += point.requests;
 		} else {
-			totals.set(key, { model: point.model, provider: point.provider, total: point.requests });
+			totals.set(key, {
+				model: point.model,
+				provider: point.provider,
+				total: point.requests,
+			});
 		}
 	}
 
-	const sorted = [...totals.entries()].map(([key, value]) => ({ key, ...value })).sort((a, b) => b.total - a.total);
+	const sorted = [...totals.entries()]
+		.map(([key, value]) => ({ key, ...value }))
+		.sort((a, b) => b.total - a.total);
 	const topEntries = sorted.slice(0, topN);
-	const topKeys = new Set(topEntries.map(entry => entry.key));
+	const topKeys = new Set(topEntries.map((entry) => entry.key));
 
 	const topModelCounts = new Map<string, number>();
 	for (const entry of topEntries) {
@@ -186,28 +214,38 @@ function buildModelPreferenceSeries(
 	const labelByKey = new Map<string, string>();
 	for (const entry of topEntries) {
 		const showProvider = (topModelCounts.get(entry.model) ?? 0) > 1;
-		labelByKey.set(entry.key, showProvider ? `${entry.model} (${entry.provider})` : entry.model);
+		labelByKey.set(
+			entry.key,
+			showProvider ? `${entry.model} (${entry.provider})` : entry.model,
+		);
 	}
 
 	const dataMap = new Map<number, Record<string, number>>();
 
 	for (const point of points) {
 		const key = `${point.model}::${point.provider}`;
-		const bucket = dataMap.get(point.timestamp) ?? { timestamp: point.timestamp, total: 0 };
+		const bucket = dataMap.get(point.timestamp) ?? {
+			timestamp: point.timestamp,
+			total: 0,
+		};
 		bucket.total += point.requests;
-		const seriesLabel = topKeys.has(key) ? (labelByKey.get(key) ?? point.model) : "Other";
+		const seriesLabel = topKeys.has(key)
+			? (labelByKey.get(key) ?? point.model)
+			: "Other";
 		bucket[seriesLabel] = (bucket[seriesLabel] ?? 0) + point.requests;
 		dataMap.set(point.timestamp, bucket);
 	}
 
-	const series = topEntries.map(entry => labelByKey.get(entry.key) ?? entry.model);
-	if ([...dataMap.values()].some(row => (row.Other ?? 0) > 0)) {
+	const series = topEntries.map(
+		(entry) => labelByKey.get(entry.key) ?? entry.model,
+	);
+	if ([...dataMap.values()].some((row) => (row.Other ?? 0) > 0)) {
 		series.push("Other");
 	}
 
 	const data = [...dataMap.values()]
 		.sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0))
-		.map(row => {
+		.map((row) => {
 			const total = row.total ?? 0;
 			for (const key of series) {
 				row[key] = total > 0 ? ((row[key] ?? 0) / total) * 100 : 0;

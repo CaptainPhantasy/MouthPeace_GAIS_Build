@@ -36,7 +36,10 @@ function sanitizeArchivePath(archivePath: string): string | null {
 	return normalized;
 }
 
-async function extractEmbeddedClientArchive(archiveBytes: Buffer, outputDir: string): Promise<void> {
+async function extractEmbeddedClientArchive(
+	archiveBytes: Buffer,
+	outputDir: string,
+): Promise<void> {
 	const archive = new Bun.Archive(archiveBytes);
 	const files = await archive.files();
 	const extractRoot = path.resolve(outputDir);
@@ -46,7 +49,9 @@ async function extractEmbeddedClientArchive(archiveBytes: Buffer, outputDir: str
 		if (!sanitizedPath) continue;
 		const destinationPath = path.resolve(extractRoot, sanitizedPath);
 		if (!destinationPath.startsWith(extractRoot + path.sep)) {
-			throw new Error(`Archive entry escapes extraction directory: ${archivePath}`);
+			throw new Error(
+				`Archive entry escapes extraction directory: ${archivePath}`,
+			);
 		}
 		await Bun.write(destinationPath, file);
 	}
@@ -58,7 +63,9 @@ async function getCompiledClientDir(): Promise<string> {
 
 	const archiveBytes = getEmbeddedClientArchive?.();
 	if (!archiveBytes) {
-		throw new Error("Compiled stats client bundle missing. Rebuild binary with embedded stats assets.");
+		throw new Error(
+			"Compiled stats client bundle missing. Rebuild binary with embedded stats assets.",
+		);
 	}
 
 	compiledClientDirPromise = (async () => {
@@ -88,12 +95,12 @@ async function getLatestMtime(dir: string): Promise<number> {
 		if (entry.isDirectory()) {
 			promises.push(getLatestMtime(fullPath));
 		} else if (entry.isFile()) {
-			promises.push(fs.stat(fullPath).then(stats => stats.mtimeMs));
+			promises.push(fs.stat(fullPath).then((stats) => stats.mtimeMs));
 		}
 	}
 
 	let latest = 0;
-	await Promise.allSettled(promises).then(results => {
+	await Promise.allSettled(promises).then((results) => {
 		for (const result of results) {
 			if (result.status === "fulfilled") {
 				latest = Math.max(latest, result.value);
@@ -108,7 +115,11 @@ const ensureClientBuild = async () => {
 	const indexPath = path.join(STATIC_DIR, "index.html");
 	const cssPath = path.join(STATIC_DIR, "styles.css");
 	const clientSourceMtime = await getLatestMtime(CLIENT_DIR);
-	const tailwindConfigPath = path.join(import.meta.dir, "..", "tailwind.config.js");
+	const tailwindConfigPath = path.join(
+		import.meta.dir,
+		"..",
+		"tailwind.config.js",
+	);
 	let tailwindConfigMtime = 0;
 	try {
 		const tailwindConfigStats = await fs.stat(tailwindConfigPath);
@@ -117,7 +128,10 @@ const ensureClientBuild = async () => {
 	const sourceMtime = Math.max(clientSourceMtime, tailwindConfigMtime);
 	let shouldBuild = true;
 	try {
-		const [indexStats, cssStats] = await Promise.all([fs.stat(indexPath), fs.stat(cssPath)]);
+		const [indexStats, cssStats] = await Promise.all([
+			fs.stat(indexPath),
+			fs.stat(cssPath),
+		]);
 		if (
 			indexStats.isFile() &&
 			cssStats.isFile() &&
@@ -136,11 +150,16 @@ const ensureClientBuild = async () => {
 
 	console.log("Building stats client...");
 	const packageRoot = path.join(import.meta.dir, "..");
-	const buildResult = await $`bun run build.ts`.cwd(packageRoot).quiet().nothrow();
+	const buildResult = await $`bun run build.ts`
+		.cwd(packageRoot)
+		.quiet()
+		.nothrow();
 	if (buildResult.exitCode !== 0) {
 		const output = buildResult.text().trim();
 		const details = output ? `\n${output}` : "";
-		throw new Error(`Failed to build stats client (exit ${buildResult.exitCode})${details}`);
+		throw new Error(
+			`Failed to build stats client (exit ${buildResult.exitCode})${details}`,
+		);
 	}
 
 	const indexHtml = `<!DOCTYPE html>
@@ -177,13 +196,17 @@ async function handleApi(req: Request): Promise<Response> {
 
 	if (path === "/api/stats/recent") {
 		const limit = url.searchParams.get("limit");
-		const stats = await getRecentRequests(limit ? parseInt(limit, 10) : undefined);
+		const stats = await getRecentRequests(
+			limit ? parseInt(limit, 10) : undefined,
+		);
 		return Response.json(stats);
 	}
 
 	if (path === "/api/stats/errors") {
 		const limit = url.searchParams.get("limit");
-		const stats = await getRecentErrors(limit ? parseInt(limit, 10) : undefined);
+		const stats = await getRecentErrors(
+			limit ? parseInt(limit, 10) : undefined,
+		);
 		return Response.json(stats);
 	}
 
@@ -244,7 +267,9 @@ async function handleStatic(requestPath: string): Promise<Response> {
 /**
  * Start the HTTP server.
  */
-export async function startServer(port = 3847): Promise<{ port: number; stop: () => void }> {
+export async function startServer(
+	port = 3847,
+): Promise<{ port: number; stop: () => void }> {
 	await ensureClientBuild();
 
 	const server = Bun.serve({

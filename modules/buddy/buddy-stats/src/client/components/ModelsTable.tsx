@@ -15,7 +15,15 @@ import { Line } from "react-chartjs-2";
 import type { ModelPerformancePoint, ModelStats } from "../types";
 import { useSystemTheme } from "../useSystemTheme";
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(
+	CategoryScale,
+	LinearScale,
+	PointElement,
+	LineElement,
+	Title,
+	Tooltip,
+	Legend,
+);
 
 const MODEL_COLORS = [
 	"#a78bfa", // violet
@@ -67,23 +75,33 @@ type ModelPerformanceSeries = {
 export function ModelsTable({ models, performanceSeries }: ModelsTableProps) {
 	const [expandedKey, setExpandedKey] = useState<string | null>(null);
 
-	const performanceSeriesByKey = useMemo(() => buildModelPerformanceLookup(performanceSeries), [performanceSeries]);
+	const performanceSeriesByKey = useMemo(
+		() => buildModelPerformanceLookup(performanceSeries),
+		[performanceSeries],
+	);
 	const theme = useSystemTheme();
 	const chartTheme = CHART_THEMES[theme];
 	const sortedModels = [...models].sort(
-		(a, b) => b.totalInputTokens + b.totalOutputTokens - (a.totalInputTokens + a.totalOutputTokens),
+		(a, b) =>
+			b.totalInputTokens +
+			b.totalOutputTokens -
+			(a.totalInputTokens + a.totalOutputTokens),
 	);
 
 	return (
 		<div className="surface overflow-hidden">
 			<div className="px-5 py-4 border-b border-[var(--border-subtle)]">
-				<h3 className="text-sm font-semibold text-[var(--text-primary)]">Model Statistics</h3>
+				<h3 className="text-sm font-semibold text-[var(--text-primary)]">
+					Model Statistics
+				</h3>
 			</div>
 
 			<div className="overflow-x-auto">
 				<div
 					className="grid gap-3 px-5 py-3 text-[var(--text-muted)] text-xs uppercase tracking-wider font-semibold"
-					style={{ gridTemplateColumns: "2fr 0.9fr 0.9fr 1fr 0.8fr 0.8fr 140px 40px" }}
+					style={{
+						gridTemplateColumns: "2fr 0.9fr 0.9fr 1fr 0.8fr 0.8fr 140px 40px",
+					}}
 				>
 					<div>Model</div>
 					<div className="text-right">Requests</div>
@@ -113,11 +131,18 @@ export function ModelsTable({ models, performanceSeries }: ModelsTableProps) {
 								>
 									<div
 										className="grid gap-3 items-center"
-										style={{ gridTemplateColumns: "2fr 0.9fr 0.9fr 1fr 0.8fr 0.8fr 140px 40px" }}
+										style={{
+											gridTemplateColumns:
+												"2fr 0.9fr 0.9fr 1fr 0.8fr 0.8fr 140px 40px",
+										}}
 									>
 										<div>
-											<div className="font-medium text-[var(--text-primary)]">{model.model}</div>
-											<div className="text-xs text-[var(--text-muted)]">{model.provider}</div>
+											<div className="font-medium text-[var(--text-primary)]">
+												{model.model}
+											</div>
+											<div className="text-xs text-[var(--text-muted)]">
+												{model.provider}
+											</div>
 										</div>
 										<div className="text-right text-[var(--text-secondary)] font-mono text-sm">
 											{model.totalRequests.toLocaleString()}
@@ -126,33 +151,48 @@ export function ModelsTable({ models, performanceSeries }: ModelsTableProps) {
 											${model.totalCost.toFixed(2)}
 										</div>
 										<div className="text-right text-[var(--text-secondary)] font-mono text-sm">
-											{(model.totalInputTokens + model.totalOutputTokens).toLocaleString()}
+											{(
+												model.totalInputTokens + model.totalOutputTokens
+											).toLocaleString()}
 										</div>
 										<div className="text-right text-[var(--text-secondary)] font-mono text-sm">
 											{model.avgTokensPerSecond?.toFixed(1) ?? "-"}
 										</div>
 										<div className="text-right text-[var(--text-secondary)] font-mono text-sm">
-											{model.avgTtft ? `${(model.avgTtft / 1000).toFixed(2)}s` : "-"}
+											{model.avgTtft
+												? `${(model.avgTtft / 1000).toFixed(2)}s`
+												: "-"}
 										</div>
 										<div className="h-10">
 											{trendData.length === 0 ? (
-												<div className="text-[var(--text-muted)] text-center text-sm">-</div>
+												<div className="text-[var(--text-muted)] text-center text-sm">
+													-
+												</div>
 											) : (
 												<TrendChart data={trendData} color={trendColor} />
 											)}
 										</div>
 										<div className="flex justify-center text-[var(--text-muted)]">
-											{isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+											{isExpanded ? (
+												<ChevronUp size={16} />
+											) : (
+												<ChevronDown size={16} />
+											)}
 										</div>
 									</div>
 								</button>
 
 								{isExpanded && (
 									<div className="px-5 py-4 bg-[var(--bg-elevated)] border-t border-[var(--border-subtle)]">
-										<div className="grid gap-4" style={{ gridTemplateColumns: "200px 1fr" }}>
+										<div
+											className="grid gap-4"
+											style={{ gridTemplateColumns: "200px 1fr" }}
+										>
 											<div className="space-y-4 text-sm">
 												<div>
-													<div className="text-[var(--text-primary)] font-medium mb-2">Quality</div>
+													<div className="text-[var(--text-primary)] font-medium mb-2">
+														Quality
+													</div>
 													<div className="space-y-1 text-[var(--text-secondary)]">
 														<div className="flex items-center justify-between">
 															<span>Error rate</span>
@@ -175,18 +215,24 @@ export function ModelsTable({ models, performanceSeries }: ModelsTableProps) {
 													</div>
 												</div>
 												<div>
-													<div className="text-[var(--text-primary)] font-medium mb-2">Latency</div>
+													<div className="text-[var(--text-primary)] font-medium mb-2">
+														Latency
+													</div>
 													<div className="space-y-1 text-[var(--text-secondary)]">
 														<div className="flex items-center justify-between">
 															<span>Avg duration</span>
 															<span className="font-mono">
-																{model.avgDuration ? `${(model.avgDuration / 1000).toFixed(2)}s` : "-"}
+																{model.avgDuration
+																	? `${(model.avgDuration / 1000).toFixed(2)}s`
+																	: "-"}
 															</span>
 														</div>
 														<div className="flex items-center justify-between">
 															<span>Avg TTFT</span>
 															<span className="font-mono">
-																{model.avgTtft ? `${(model.avgTtft / 1000).toFixed(2)}s` : "-"}
+																{model.avgTtft
+																	? `${(model.avgTtft / 1000).toFixed(2)}s`
+																	: "-"}
 															</span>
 														</div>
 													</div>
@@ -198,7 +244,11 @@ export function ModelsTable({ models, performanceSeries }: ModelsTableProps) {
 														No data available
 													</div>
 												) : (
-													<PerformanceChart data={trendData} color={trendColor} chartTheme={chartTheme} />
+													<PerformanceChart
+														data={trendData}
+														color={trendColor}
+														chartTheme={chartTheme}
+													/>
 												)}
 											</div>
 										</div>
@@ -221,10 +271,10 @@ function TrendChart({
 	color: string;
 }) {
 	const chartData = {
-		labels: data.map(d => format(new Date(d.timestamp), "MMM d")),
+		labels: data.map((d) => format(new Date(d.timestamp), "MMM d")),
 		datasets: [
 			{
-				data: data.map(d => d.avgTokensPerSecond ?? 0),
+				data: data.map((d) => d.avgTokensPerSecond ?? 0),
 				borderColor: color,
 				backgroundColor: "transparent",
 				tension: 0.4,
@@ -252,16 +302,20 @@ function PerformanceChart({
 	color,
 	chartTheme,
 }: {
-	data: Array<{ timestamp: number; avgTtftSeconds: number | null; avgTokensPerSecond: number | null }>;
+	data: Array<{
+		timestamp: number;
+		avgTtftSeconds: number | null;
+		avgTokensPerSecond: number | null;
+	}>;
 	color: string;
 	chartTheme: ChartTheme;
 }) {
 	const chartData = {
-		labels: data.map(d => format(new Date(d.timestamp), "MMM d")),
+		labels: data.map((d) => format(new Date(d.timestamp), "MMM d")),
 		datasets: [
 			{
 				label: "TTFT",
-				data: data.map(d => d.avgTtftSeconds ?? null),
+				data: data.map((d) => d.avgTtftSeconds ?? null),
 				borderColor: "#fbbf24",
 				backgroundColor: "transparent",
 				tension: 0.4,
@@ -271,7 +325,7 @@ function PerformanceChart({
 			},
 			{
 				label: "Tokens/s",
-				data: data.map(d => d.avgTokensPerSecond ?? null),
+				data: data.map((d) => d.avgTokensPerSecond ?? null),
 				borderColor: color,
 				backgroundColor: "transparent",
 				tension: 0.4,
@@ -330,13 +384,25 @@ function PerformanceChart({
 	return <Line data={chartData} options={options} />;
 }
 
-function buildModelPerformanceLookup(points: ModelPerformancePoint[], days = 14): Map<string, ModelPerformanceSeries> {
+function buildModelPerformanceLookup(
+	points: ModelPerformancePoint[],
+	days = 14,
+): Map<string, ModelPerformanceSeries> {
 	const dayMs = 24 * 60 * 60 * 1000;
-	const maxTimestamp = points.reduce((max, point) => Math.max(max, point.timestamp), 0);
-	const anchor = maxTimestamp > 0 ? maxTimestamp : Math.floor(Date.now() / dayMs) * dayMs;
+	const maxTimestamp = points.reduce(
+		(max, point) => Math.max(max, point.timestamp),
+		0,
+	);
+	const anchor =
+		maxTimestamp > 0 ? maxTimestamp : Math.floor(Date.now() / dayMs) * dayMs;
 	const start = anchor - (days - 1) * dayMs;
-	const buckets = Array.from({ length: days }, (_, index) => start + index * dayMs);
-	const bucketIndex = new Map(buckets.map((timestamp, index) => [timestamp, index]));
+	const buckets = Array.from(
+		{ length: days },
+		(_, index) => start + index * dayMs,
+	);
+	const bucketIndex = new Map(
+		buckets.map((timestamp, index) => [timestamp, index]),
+	);
 	const seriesByKey = new Map<string, ModelPerformanceSeries>();
 
 	for (const point of points) {
@@ -345,7 +411,7 @@ function buildModelPerformanceLookup(points: ModelPerformancePoint[], days = 14)
 		if (!series) {
 			series = {
 				label: `${point.model} (${point.provider})`,
-				data: buckets.map(timestamp => ({
+				data: buckets.map((timestamp) => ({
 					timestamp,
 					avgTtftSeconds: null,
 					avgTokensPerSecond: null,

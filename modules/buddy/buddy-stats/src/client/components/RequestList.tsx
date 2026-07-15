@@ -12,7 +12,9 @@ export function RequestList({ requests, onSelect, title }: RequestListProps) {
 	return (
 		<div className="surface overflow-hidden flex flex-col h-full">
 			<div className="px-5 py-4 border-b border-[var(--border-subtle)]">
-				<h3 className="text-sm font-semibold text-[var(--text-primary)]">{title}</h3>
+				<h3 className="text-sm font-semibold text-[var(--text-primary)]">
+					{title}
+				</h3>
 			</div>
 			<div className="overflow-auto flex-1">
 				<table className="w-full">
@@ -27,15 +29,19 @@ export function RequestList({ requests, onSelect, title }: RequestListProps) {
 						</tr>
 					</thead>
 					<tbody>
-						{requests.map(req => (
+						{requests.map((req) => (
 							<tr
 								key={`${req.sessionFile}-${req.entryId}`}
 								onClick={() => onSelect(req)}
 								className="table-row cursor-pointer border-b border-[var(--border-subtle)] last:border-b-0"
 							>
 								<td className="py-3 px-4">
-									<div className="font-medium text-[var(--text-primary)] text-sm">{req.model}</div>
-									<div className="text-xs text-[var(--text-muted)]">{req.provider}</div>
+									<div className="font-medium text-[var(--text-primary)] text-sm">
+										{req.model}
+									</div>
+									<div className="text-xs text-[var(--text-muted)]">
+										{req.provider}
+									</div>
 								</td>
 								<td className="py-3 px-4 text-sm text-[var(--text-secondary)]">
 									{formatDistanceToNow(req.timestamp, { addSuffix: true })}
@@ -51,16 +57,25 @@ export function RequestList({ requests, onSelect, title }: RequestListProps) {
 								</td>
 								<td className="py-3 px-4 text-center">
 									{req.errorMessage ? (
-										<XCircle size={16} className="text-[var(--accent-red)] mx-auto" />
+										<XCircle
+											size={16}
+											className="text-[var(--accent-red)] mx-auto"
+										/>
 									) : (
-										<CheckCircle2 size={16} className="text-[var(--accent-green)] mx-auto" />
+										<CheckCircle2
+											size={16}
+											className="text-[var(--accent-green)] mx-auto"
+										/>
 									)}
 								</td>
 							</tr>
 						))}
 						{requests.length === 0 && (
 							<tr>
-								<td colSpan={6} className="py-12 text-center text-[var(--text-muted)] text-sm">
+								<td
+									colSpan={6}
+									className="py-12 text-center text-[var(--text-muted)] text-sm"
+								>
 									No requests found
 								</td>
 							</tr>

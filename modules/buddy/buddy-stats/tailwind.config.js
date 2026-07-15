@@ -1,7 +1,9 @@
 /** @type {import('tailwindcss').Config} */
 import * as path from "node:path";
 export default {
-	content: [path.join(import.meta.dir, "src", "client", "**/*.{js,jsx,ts,tsx}")],
+	content: [
+		path.join(import.meta.dir, "src", "client", "**/*.{js,jsx,ts,tsx}"),
+	],
 	darkMode: "class",
 	theme: {
 		extend: {

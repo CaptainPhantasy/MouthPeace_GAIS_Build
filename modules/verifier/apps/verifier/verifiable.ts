@@ -25,7 +25,7 @@ import { promisify } from "node:util";
 
 const execFileP = promisify(execFile);
 
-import type { ExtensionAPI, ExtensionCommandContext, ExtensionContext } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI, ExtensionCommandContext, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import {
   BuilderInputEditor,
   type ConnectionPhase as FooterConnectionPhase,

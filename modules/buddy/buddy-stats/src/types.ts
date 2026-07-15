@@ -1,4 +1,31 @@
-import type { AssistantMessage, StopReason, Usage } from "@mouthpeace/pi-ai";
+export interface Usage {
+	input: number;
+	output: number;
+	cacheRead: number;
+	cacheWrite: number;
+	totalTokens: number;
+	premiumRequests?: number;
+	cost: {
+		input: number;
+		output: number;
+		cacheRead: number;
+		cacheWrite: number;
+		total: number;
+	};
+}
+
+export interface AssistantMessage {
+	role: "assistant";
+	model: string;
+	provider: string;
+	api: string;
+	timestamp: number;
+	duration?: number;
+	ttft?: number;
+	stopReason: string;
+	errorMessage?: string;
+	usage: Usage;
+}
 
 /**
  * Extracted stats from an assistant message.
@@ -25,7 +52,7 @@ export interface MessageStats {
 	/** Time to first token in milliseconds */
 	ttft: number | null;
 	/** Stop reason */
-	stopReason: StopReason;
+	stopReason: string;
 	/** Error message if stopReason is error */
 	errorMessage: string | null;
 	/** Token usage */
@@ -36,8 +63,8 @@ export interface MessageStats {
  * Full details of a request, including content.
  */
 export interface RequestDetails extends MessageStats {
-	messages: any[]; // The full conversation history or just the last turn
-	output: any; // The model's response
+	messages: unknown[]; // The full conversation history or just the last turn
+	output: unknown; // The model's response
 }
 
 /**
@@ -172,4 +199,7 @@ export interface SessionMessageEntry {
 	message: AssistantMessage | { role: "user" | "toolResult" };
 }
 
-export type SessionEntry = SessionHeader | SessionMessageEntry | { type: string };
+export type SessionEntry =
+	| SessionHeader
+	| SessionMessageEntry
+	| { type: string };

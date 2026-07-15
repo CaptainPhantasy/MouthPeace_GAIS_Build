@@ -1,7 +1,7 @@
 /**
  * Verifier persona frontmatter parser + body templating.
  *
- * Wraps `parseFrontmatter` from `@mariozechner/pi-coding-agent`, layering
+ * Wraps `parseFrontmatter` from `@earendil-works/pi-coding-agent`, layering
  * verifier-specific shape validation on top:
  *
  *   - Required scalar fields: name, description, tools, model, domain.
@@ -15,7 +15,7 @@
  * the harness via `--system-prompt` as a full overwrite.
  */
 
-import { parseFrontmatter } from "@mariozechner/pi-coding-agent";
+import { parseFrontmatter } from "@earendil-works/pi-coding-agent";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

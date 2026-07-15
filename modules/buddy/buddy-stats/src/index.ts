@@ -1,12 +1,20 @@
 #!/usr/bin/env bun
 
 import { parseArgs } from "node:util";
-import { formatDuration, formatNumber, formatPercent } from "@mouthpeace/pi-utils";
-import { getDashboardStats, getTotalMessageCount, syncAllSessions } from "./aggregator";
+import {
+	getDashboardStats,
+	getTotalMessageCount,
+	syncAllSessions,
+} from "./aggregator";
 import { closeDb } from "./db";
+import { formatDuration, formatNumber, formatPercent } from "./runtime";
 import { startServer } from "./server";
 
-export { getDashboardStats, getTotalMessageCount, syncAllSessions } from "./aggregator";
+export {
+	getDashboardStats,
+	getTotalMessageCount,
+	syncAllSessions,
+} from "./aggregator";
 export { closeDb } from "./db";
 export { startServer } from "./server";
 export type {
@@ -43,14 +51,24 @@ async function printStats(): Promise<void> {
 	console.log("\n=== AI Usage Statistics ===\n");
 
 	console.log("Overall:");
-	console.log(`  Requests: ${formatNumber(overall.totalRequests)} (${formatNumber(overall.failedRequests)} errors)`);
+	console.log(
+		`  Requests: ${formatNumber(overall.totalRequests)} (${formatNumber(overall.failedRequests)} errors)`,
+	);
 	console.log(`  Error Rate: ${formatPercent(overall.errorRate)}`);
-	console.log(`  Total Tokens: ${formatNumber(overall.totalInputTokens + overall.totalOutputTokens)}`);
+	console.log(
+		`  Total Tokens: ${formatNumber(overall.totalInputTokens + overall.totalOutputTokens)}`,
+	);
 	console.log(`  Cache Rate: ${formatPercent(overall.cacheRate)}`);
 	console.log(`  Total Cost: ${formatCost(overall.totalCost)}`);
-	console.log(`  Premium Requests: ${formatNumber(normalizePremiumRequests(overall.totalPremiumRequests ?? 0))}`);
-	console.log(`  Avg Duration: ${overall.avgDuration !== null ? formatDuration(overall.avgDuration) : "-"}`);
-	console.log(`  Avg TTFT: ${overall.avgTtft !== null ? formatDuration(overall.avgTtft) : "-"}`);
+	console.log(
+		`  Premium Requests: ${formatNumber(normalizePremiumRequests(overall.totalPremiumRequests ?? 0))}`,
+	);
+	console.log(
+		`  Avg Duration: ${overall.avgDuration !== null ? formatDuration(overall.avgDuration) : "-"}`,
+	);
+	console.log(
+		`  Avg TTFT: ${overall.avgTtft !== null ? formatDuration(overall.avgTtft) : "-"}`,
+	);
 	if (overall.avgTokensPerSecond !== null) {
 		console.log(`  Avg Tokens/s: ${overall.avgTokensPerSecond.toFixed(1)}`);
 	}
@@ -67,7 +85,9 @@ async function printStats(): Promise<void> {
 	if (byFolder.length > 0) {
 		console.log("\nBy Folder:");
 		for (const f of byFolder.slice(0, 10)) {
-			console.log(`  ${f.folder}: ${formatNumber(f.totalRequests)} reqs, ${formatCost(f.totalCost)}`);
+			console.log(
+				`  ${f.folder}: ${formatNumber(f.totalRequests)} reqs, ${formatCost(f.totalCost)}`,
+			);
 		}
 	}
 
@@ -115,7 +135,9 @@ Examples:
 		console.log("Syncing session files...");
 		const { processed, files } = await syncAllSessions();
 		const total = await getTotalMessageCount();
-		console.log(`Synced ${processed} new entries from ${files} files (${total} total)\n`);
+		console.log(
+			`Synced ${processed} new entries from ${files} files (${total} total)\n`,
+		);
 
 		if (values.json) {
 			const stats = await getDashboardStats();

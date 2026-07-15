@@ -48,9 +48,9 @@ import type {
   InputEventResult,
   SessionShutdownEvent,
   SessionStartEvent,
-} from "@mariozechner/pi-coding-agent";
-import { CustomEditor } from "@mariozechner/pi-coding-agent";
-import { Text, truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
+} from "@earendil-works/pi-coding-agent";
+import { CustomEditor } from "@earendil-works/pi-coding-agent";
+import { Text, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import * as crypto from "node:crypto";
 import { readFileSync } from "node:fs";

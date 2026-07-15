@@ -66,7 +66,9 @@ async function main(): Promise<void> {
 	}
 
 	if (!process.argv.includes(GENERATE_FLAG)) {
-		console.log(`Skipping ${GENERATED_FILE}; pass ${GENERATE_FLAG} to build the embedded bundle`);
+		console.log(
+			`Skipping ${GENERATED_FILE}; pass ${GENERATE_FLAG} to build the embedded bundle`,
+		);
 		return;
 	}
 

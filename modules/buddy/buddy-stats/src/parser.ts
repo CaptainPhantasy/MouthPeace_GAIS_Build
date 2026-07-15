@@ -1,8 +1,12 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import type { AssistantMessage } from "@mouthpeace/pi-ai";
-import { getSessionsDir, isEnoent } from "@mouthpeace/pi-utils";
-import type { MessageStats, SessionEntry, SessionMessageEntry } from "./types";
+import { getSessionsDir, isEnoent } from "./runtime";
+import type {
+	AssistantMessage,
+	MessageStats,
+	SessionEntry,
+	SessionMessageEntry,
+} from "./types";
 
 /**
  * Extract folder name from session filename.
@@ -29,9 +33,13 @@ function isAssistantMessage(entry: SessionEntry): entry is SessionMessageEntry {
 /**
  * Extract stats from an assistant message entry.
  */
-function extractStats(sessionFile: string, folder: string, entry: SessionMessageEntry): MessageStats | null {
+function extractStats(
+	sessionFile: string,
+	folder: string,
+	entry: SessionMessageEntry,
+): MessageStats | null {
 	const msg = entry.message as AssistantMessage;
-	if (!msg || msg.role !== "assistant") return null;
+	if (msg?.role !== "assistant") return null;
 
 	return {
 		sessionFile,
@@ -51,12 +59,19 @@ function extractStats(sessionFile: string, folder: string, entry: SessionMessage
 
 const LF = 0x0a;
 
-function parseSessionEntriesLenient(bytes: Uint8Array): { entries: SessionEntry[]; read: number } {
+function parseSessionEntriesLenient(bytes: Uint8Array): {
+	entries: SessionEntry[];
+	read: number;
+} {
 	const entries: SessionEntry[] = [];
 	let cursor = 0;
 
 	while (cursor < bytes.length) {
-		const { values, error, read, done } = Bun.JSONL.parseChunk(bytes, cursor, bytes.length);
+		const { values, error, read, done } = Bun.JSONL.parseChunk(
+			bytes,
+			cursor,
+			bytes.length,
+		);
 		if (values.length > 0) {
 			entries.push(...(values as SessionEntry[]));
 		}
@@ -114,7 +129,9 @@ export async function listSessionFolders(): Promise<string[]> {
 	try {
 		const sessionsDir = getSessionsDir();
 		const entries = await fs.readdir(sessionsDir, { withFileTypes: true });
-		return entries.filter(e => e.isDirectory()).map(e => path.join(sessionsDir, e.name));
+		return entries
+			.filter((e) => e.isDirectory())
+			.map((e) => path.join(sessionsDir, e.name));
 	} catch {
 		return [];
 	}
@@ -125,8 +142,13 @@ export async function listSessionFolders(): Promise<string[]> {
  */
 export async function listSessionFiles(folderPath: string): Promise<string[]> {
 	try {
-		const entries = await fs.readdir(folderPath, { recursive: true, withFileTypes: true });
-		return entries.filter(e => e.isFile() && e.name.endsWith(".jsonl")).map(e => path.join(e.parentPath, e.name));
+		const entries = await fs.readdir(folderPath, {
+			recursive: true,
+			withFileTypes: true,
+		});
+		return entries
+			.filter((e) => e.isFile() && e.name.endsWith(".jsonl"))
+			.map((e) => path.join(e.parentPath, e.name));
 	} catch {
 		return [];
 	}
@@ -150,7 +172,10 @@ export async function listAllSessionFiles(): Promise<string[]> {
 /**
  * Find a specific entry in a session file.
  */
-export async function getSessionEntry(sessionPath: string, entryId: string): Promise<SessionEntry | null> {
+export async function getSessionEntry(
+	sessionPath: string,
+	entryId: string,
+): Promise<SessionEntry | null> {
 	let bytes: Uint8Array;
 	try {
 		bytes = await Bun.file(sessionPath).bytes();
